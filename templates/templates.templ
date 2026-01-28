@@ -1,0 +1,209 @@
+package templates
+
+import (
+	"retroPcPartTracker/store"
+)
+
+templ Layout(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<title>{ title } - PC Parts Tracker</title>
+		<link rel="stylesheet" href="/static/css/style.css"/>
+	</head>
+	<body>
+		<header>
+			<div class="container">
+				<h1><a href="/">PC Parts Price Tracker</a></h1>
+				<nav>
+					<a href="/">Home</a>
+					<a href="/parts/GPU">GPUs</a>
+					<a href="/parts/CPU">CPUs</a>
+					<a href="/parts/RAM">RAM</a>
+					<a href="/parts/Motherboard">Motherboards</a>
+					<a href="/parts/Storage">Storage</a>
+				</nav>
+			</div>
+		</header>
+		
+		<main class="container">
+			{ children... }
+		</main>
+		
+		<footer>
+			<div class="container">
+				<p>PC Parts Tracker - Find the best deals from authentic dealers</p>
+			</div>
+		</footer>
+	</body>
+	</html>
+}
+
+templ Home(parts []store.Part) {
+	@Layout("Home") {
+		<section class="search-section">
+			<h2>Search for PC Parts</h2>
+			<form action="/search" method="GET">
+				<input 
+					type="text" 
+					name="q" 
+					placeholder="Search for GPUs, CPUs, RAM..." 
+					required
+					autofocus
+				/>
+				<button type="submit">Search</button>
+			</form>
+		</section>
+
+		<section class="recent-parts">
+			<h2>Recently Added Parts</h2>
+			if len(parts) == 0 {
+				<p>No parts available yet. Check back soon!</p>
+			} else {
+				<table>
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Type</th>
+							<th>Brand</th>
+							<th>Details</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, part := range parts {
+							<tr>
+								<td><a href={ templ.SafeURL("/part/" + strconv.Itoa(part.ID)) }>{ part.Name }</a></td>
+								<td>{ part.Type }</td>
+								<td>{ part.Brand }</td>
+								<td><a href={ templ.SafeURL("/part/" + strconv.Itoa(part.ID)) }>View Prices</a></td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+		</section>
+	}
+}
+
+templ SearchResults(query string, parts []store.Part) {
+	@Layout("Search Results") {
+		<section>
+			<h2>Search Results for "{ query }"</h2>
+			<p><a href="/">← Back to Home</a></p>
+			
+			if len(parts) == 0 {
+				<p>No parts found matching your search.</p>
+			} else {
+				<table>
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Type</th>
+							<th>Brand</th>
+							<th>Specs</th>
+							<th>Details</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, part := range parts {
+							<tr>
+								<td><a href={ templ.SafeURL("/part/" + strconv.Itoa(part.ID)) }>{ part.Name }</a></td>
+								<td>{ part.Type }</td>
+								<td>{ part.Brand }</td>
+								<td>{ part.Specs }</td>
+								<td><a href={ templ.SafeURL("/part/" + strconv.Itoa(part.ID)) }>View Prices</a></td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+		</section>
+	}
+}
+
+templ PartsByType(partType string, parts []store.Part) {
+	@Layout(partType + "s") {
+		<section>
+			<h2>{ partType }s</h2>
+			<p><a href="/">← Back to Home</a></p>
+			
+			if len(parts) == 0 {
+				<p>No { partType }s available yet.</p>
+			} else {
+				<table>
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Brand</th>
+							<th>Specs</th>
+							<th>Details</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, part := range parts {
+							<tr>
+								<td><a href={ templ.SafeURL("/part/" + strconv.Itoa(part.ID)) }>{ part.Name }</a></td>
+								<td>{ part.Brand }</td>
+								<td>{ part.Specs }</td>
+								<td><a href={ templ.SafeURL("/part/" + strconv.Itoa(part.ID)) }>View Prices</a></td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+		</section>
+	}
+}
+
+templ PartDetail(part *store.Part, prices []store.Price) {
+	@Layout(part.Name) {
+		<section>
+			<p><a href="/">← Back to Home</a></p>
+			
+			<h2>{ part.Name }</h2>
+			<div class="part-info">
+				<p><strong>Type:</strong> { part.Type }</p>
+				<p><strong>Brand:</strong> { part.Brand }</p>
+				<p><strong>Specifications:</strong> { part.Specs }</p>
+			</div>
+		</section>
+
+		<section class="prices">
+			<h3>Price Comparison</h3>
+			if len(prices) == 0 {
+				<p>No prices available for this part yet.</p>
+			} else {
+				<table>
+					<thead>
+						<tr>
+							<th>Dealer</th>
+							<th>Price</th>
+							<th>Stock</th>
+							<th>Rating</th>
+							<th>Link</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, price := range prices {
+							<tr>
+								<td>{ price.DealerName }</td>
+								<td>{ price.Currency } { formatPrice(price.Price) }</td>
+								<td>
+									if price.InStock {
+										<span class="in-stock">In Stock</span>
+									} else {
+										<span class="out-of-stock">Out of Stock</span>
+									}
+								</td>
+								<td>{ formatRating(price.DealerRating) } / 5.0</td>
+								<td><a href={ templ.SafeURL(price.DealerURL) } target="_blank" rel="noopener">Visit Store</a></td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+		</section>
+	}
+}
