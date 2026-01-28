@@ -1,21 +1,16 @@
-# Binaries
+# Binaries for programs and plugins
+
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
 
-# Test binary
-*.test
-
 # Go build output
 *.out
 bin/
 dist/
 build/
-
-# Dependency directories (if not using Go modules)
-vendor/
 
 # Go workspace file
 go.work
@@ -35,9 +30,18 @@ Thumbs.db
 .env
 .env.*
 
-# Coverage reports
-coverage.out
-
 # Temporary files
 tmp/
 temp/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Go workspace file
+go.work.sum
