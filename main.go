@@ -2,7 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"os"
+	"strings"
+
 	"retroPcPartTracker/handlers"
 	"retroPcPartTracker/store"
 
@@ -10,9 +14,25 @@ import (
 	_ "github.com/lib/pq"
 )
 
+const databaseURLEnvVar = "DATABASE_URL"
+
+func databaseURLFromEnv() (string, error) {
+	databaseURL := strings.TrimSpace(os.Getenv(databaseURLEnvVar))
+	if databaseURL == "" {
+		return "", fmt.Errorf("%s environment variable is required", databaseURLEnvVar)
+	}
+
+	return databaseURL, nil
+}
+
 func main() {
+	databaseURL, err := databaseURLFromEnv()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Database connection
-	db, err := sql.Open("postgres", "postgres://postgres:postgres@localhost:5432/pcparts?sslmode=disable")
+	db, err := sql.Open("postgres", databaseURL)
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
